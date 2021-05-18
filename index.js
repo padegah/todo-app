@@ -13,17 +13,19 @@ const users = require("./app/src/controllers/users/users");
 
 const config = require("./app/src/config/config");
 
-
+// register middleware to protect endpoints from users not logged in.
 app.use(function(req, res, next){
 
-    // if req is coming from browser, no authentication, just proceed
+    // we intend doing authentication for API clients only, therefore if request is coming from a client that expects html probably the browser, no authentication, just proceed
     if(req.accepts('text/html') || req.url.startsWith("/users/login")){
         next();
         return;
     }
 
+    // get the authorization header field value
     const authString = req.headers["authorization"];
 
+    // if no authorization header passed return bad request.
     if (!authString) {
         res.status(400).json({
             status: "failure",
@@ -34,13 +36,15 @@ app.use(function(req, res, next){
         return;
     }
 
+    // extract the token
     const token = authString.split(" ")[1];
 
     const secret = config.jwtSecret;
 
-    jwt.verify(token, secret, function(err, payload){
-
+    // verify the token is valid
+    jwt.verify(token, secret, function(err, /* Holds payload passed when jwt.sign was called */payload){
         if(err){
+            // if verification failed, then return 401 and auth error.
             res.status(401).json({
                 code: "authentication-error"
             });
