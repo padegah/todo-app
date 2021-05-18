@@ -4,6 +4,7 @@ const express = require("express");
 
 const router = express.Router();
 
+// import the JSON library
 const jwt = require("jsonwebtoken");
 
 var methodOverride = require('method-override');
@@ -48,15 +49,16 @@ router.post("/login", function(req, res){
     // check for valid credentials
     if (username === config.user.username && password === config.user.password) {
 
-        // assign payload
+        // create payload
         const payLoad = {username: username, firstname: "prince", lastname: "adegah"};
 
         // get secret from config file
         const secret = config.jwtSecret;
 
+        // sign the payload to generate a token
         jwt.sign(payLoad, secret, function(err, token){
 
-            // if error
+            // if error occured during signing
             if(err){
                 
                 // send status 500 with error message
@@ -78,13 +80,14 @@ router.post("/login", function(req, res){
     // check for invalid credentials
     else {
 
-        // if request is from web, return 401 status
+        // if request is from web, redirect to same page
         if(req.accepts('text/html')){
-            return res.status(401);
+            res.redirect('/users/login');
+            return;
         }
     
         // if request is from API, return failure message as an object
-        return res.json({
+        return res.status(401).json({
             status:'failure',
             code: "not-authenticated",
             message: "Invalid credentials"
